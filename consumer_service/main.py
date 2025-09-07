@@ -7,11 +7,19 @@ def main():
     """
     entry point for producer Service
     """
-    # start generate unique id
+    print("[Consumer] Starting consumer service..")
+    for json_data in consume_messages():
+        print(f"[Consumer] Received message: {json_data}")
 
-    # and write metadata to elasticsearch
+        # start generate unique id
+        unique_id = generate_unique_id(json_data)
+        print(f"[Consumer] Generated unique_id: {unique_id}")
 
-    # lastly save actual file into mongodb
+        # and write metadata to elasticsearch
+        write_metadata_to_es(unique_id, json_data)
+
+        # lastly save actual file into mongodb
+        save_file_to_mongo(unique_id, json_data["path"])
     
 if __name__ == "__main__":
     main()
