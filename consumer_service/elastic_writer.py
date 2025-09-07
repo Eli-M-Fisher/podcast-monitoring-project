@@ -9,7 +9,8 @@ def write_metadata_to_es(unique_id: str, metadata: dict):
 
     doc = {
         "id": unique_id,
-        **metadata
+        **metadata,
+        "ingested_at": datetime.utcnow().isoformat()
     }
 
     es.index(index=ES_INDEX, id=unique_id, document=doc)
