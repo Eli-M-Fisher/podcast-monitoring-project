@@ -5,4 +5,12 @@ def write_metadata_to_es(unique_id: str, metadata: dict):
     """
     and write the metadata to elasticsearch  with unique id
     """
-    ...
+    es = Elasticsearch(ES_HOST)
+
+    doc = {
+        "id": unique_id,
+        **metadata
+    }
+
+    es.index(index=ES_INDEX, id=unique_id, document=doc)
+    print(f"[Elasticsearch] Indexed document with ID: {unique_id}")
