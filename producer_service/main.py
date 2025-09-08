@@ -8,6 +8,7 @@ def main():
     """
     the entry point for producer Service
     """
+    # now iterate over all .wav files in the PODCASTS_DIR
     for file_name in os.listdir(PODCASTS_DIR):
         if file_name.endswith(".wav"):
             file_path = os.path.join(PODCASTS_DIR, file_name)

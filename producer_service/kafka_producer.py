@@ -14,6 +14,8 @@ def send_to_kafka(json_message: str):
         # serialize json message to utf-8
         value_serializer=lambda v: v.encode("utf-8")
     )
+    # send the message to the topic
     producer.send(KAFKA_TOPIC, json_message)
+    # and make sure all messages are sent (flush the buffer, means wait until all messages are sent (l.f))
     producer.flush()
     logging.info(f"Sent message to Kafka topic {KAFKA_TOPIC}")
