@@ -67,6 +67,24 @@ services:
     volumes:
       - ${PODCASTS_DIR_HOST}:${PODCASTS_DIR}:ro
 
+  transcriber:
+    build:
+      context: .
+      dockerfile: ./transcriber_service/Dockerfile
+    depends_on:
+      kafka:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    restart: on-failure
+    environment:
+      KAFKA_BROKER: kafka:${KAFKA_INTERNAL_PORT}
+      KAFKA_TOPIC: ${KAFKA_TOPIC}
+      ES_HOST: ${ES_HOST}:${ES_PORT}
+      ES_INDEX: ${ES_INDEX}
+    volumes:
+      - ${PODCASTS_DIR_HOST}:${PODCASTS_DIR}:ro
+      
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.2
     environment:
