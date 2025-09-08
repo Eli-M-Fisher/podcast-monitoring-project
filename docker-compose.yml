@@ -13,22 +13,53 @@ services:
       - zookeeper
     ports:
       - "9092:9092"
+      - "29092:29092"  # extra port for my local testing
     environment:
       KAFKA_BROKER_ID: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--list", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   producer:
     build: ./producer_service
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
+    restart: on-failure
     environment:
       KAFKA_BROKER: kafka:9092
       KAFKA_TOPIC: podcast-files
       PODCASTS_DIR: /host_podcasts
+    volumes:
+      - /Users/elifisher/Downloads/podcasts:/host_podcasts:ro
+
+  consumer:
+    build: ./consumer_service
+    depends_on:
+      kafka:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_started
+      mongo:
+        condition: service_started
+    restart: on-failure
+    environment:
+      KAFKA_BROKER: kafka:9092
+      KAFKA_TOPIC: podcast-files
+      ES_HOST: http://elasticsearch:9200
+      ES_INDEX: podcasts_metadata
+      MONGO_URI: mongodb://mongo:27017/
+      MONGO_DB: podcasts_db
+      MONGO_COLLECTION: podcasts_files
     volumes:
       - /Users/elifisher/Downloads/podcasts:/host_podcasts:ro
 
@@ -56,23 +87,6 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
-
-  consumer:
-    build: ./consumer_service
-    depends_on:
-      - kafka
-      - elasticsearch
-      - mongo
-    environment:
-      KAFKA_BROKER: kafka:9092
-      KAFKA_TOPIC: podcast-files
-      ES_HOST: http://elasticsearch:9200
-      ES_INDEX: podcasts_metadata
-      MONGO_URI: mongodb://mongo:27017/
-      MONGO_DB: podcasts_db
-      MONGO_COLLECTION: podcasts_files
-    volumes:
-      - /Users/elifisher/Downloads/podcasts:/host_podcasts:ro
 
 volumes:
   mongo_data:
