@@ -1,5 +1,6 @@
 from elasticsearch import Elasticsearch
 from config import ES_HOST, ES_INDEX
+from datetime import datetime, timezone
 
 def write_metadata_to_es(unique_id: str, metadata: dict):
     """
@@ -10,7 +11,8 @@ def write_metadata_to_es(unique_id: str, metadata: dict):
     doc = {
         "id": unique_id,
         **metadata,
-        "ingested_at": datetime.utcnow().isoformat()
+        # add to myself an ingestion timestamp for record keeping 
+        "ingested_at": datetime.now(timezone.utc).isoformat()
     }
 
     es.index(index=ES_INDEX, id=unique_id, document=doc)
