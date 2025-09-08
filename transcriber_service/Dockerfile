@@ -1,14 +1,19 @@
 FROM python:3.11-slim
 
+# set working directory
 WORKDIR /app
 
-COPY requirements.txt /app/requirements.txt
+# copy dependency files
+COPY transcriber_service/requirements.txt /app/requirements.txt
+
+# install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy common utilities
-COPY ../common /app/common
+# copy common utilities
+COPY common /app/common
 
-# Copy transcriber service code
-COPY . /app
+# copy transcriber service code
+COPY transcriber_service /app
 
+# default command
 CMD ["python", "main.py"]
