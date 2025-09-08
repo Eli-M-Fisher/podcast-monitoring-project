@@ -30,7 +30,9 @@ services:
       retries: 10
 
   producer:
-    build: ./producer_service
+    build:
+      context: .
+      dockerfile: ./producer_service/Dockerfile
     depends_on:
       kafka:
         condition: service_healthy
@@ -38,19 +40,21 @@ services:
     environment:
       KAFKA_BROKER: kafka:${KAFKA_INTERNAL_PORT}
       KAFKA_TOPIC: ${KAFKA_TOPIC}
-      PODCASTS_DIR: /host_podcasts
+      PODCASTS_DIR: ${PODCASTS_DIR}
     volumes:
-      - ${PODCASTS_DIR_HOST}:/host_podcasts:ro
+      - ${PODCASTS_DIR_HOST}:${PODCASTS_DIR}:ro
 
   consumer:
-    build: ./consumer_service
+    build:
+      context: .
+      dockerfile: ./consumer_service/Dockerfile
     depends_on:
       kafka:
         condition: service_healthy
       elasticsearch:
-        condition: service_started
+        condition: service_healthy
       mongo:
-        condition: service_started
+        condition: service_healthy
     restart: on-failure
     environment:
       KAFKA_BROKER: kafka:${KAFKA_INTERNAL_PORT}
@@ -61,7 +65,7 @@ services:
       MONGO_DB: ${MONGO_DB}
       MONGO_COLLECTION: ${MONGO_COLLECTION}
     volumes:
-      - ${PODCASTS_DIR_HOST}:/host_podcasts:ro
+      - ${PODCASTS_DIR_HOST}:${PODCASTS_DIR}:ro
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.2

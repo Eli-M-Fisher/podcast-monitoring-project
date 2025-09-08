@@ -5,6 +5,8 @@ from json_builder import build_json
 from kafka_producer import send_to_kafka
 from common.logger import Logger
 
+PODCASTS_DIR = os.getenv("PODCASTS_DIR", "/host_podcasts")
+
 logger = Logger.get_logger()
 
 def main():

@@ -5,13 +5,16 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # copy dependency files
-COPY requirements.txt /app/requirements.txt
+COPY producer_service/requirements.txt /app/requirements.txt
 
 # install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+# copy common utilities
+COPY common /app/common
+
 # and copy producer service code
-COPY . /app
+COPY producer_service /app
 
 # default command
 CMD ["python", "main.py"]

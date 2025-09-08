@@ -26,7 +26,7 @@ class Logger:
         logger.setLevel(level)
 
         # avoid duplicate handlers
-        if not logging.handlers:
+        if not logger.handlers:
             # elasticsearch handler to log to elasticsearch
             es = Elasticsearch(es_host)
 
@@ -48,7 +48,7 @@ class Logger:
 
             # and add handlers to the logger
             logger.addHandler(ESHandler())
-            logging.addHandler(logging.StreamHandler())
+            logger.addHandler(logging.StreamHandler())
 
         cls._logger = logger
-        return Logger
+        return logger

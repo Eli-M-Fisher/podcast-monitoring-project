@@ -1,8 +1,12 @@
+import os
 import pathlib
 from constants import ERROR_FILE_NOT_FOUND
 from common.logger import Logger
 
 logger = Logger.get_logger()
+
+# take podcasts dir inside container from env (default /host_podcasts)
+PODCASTS_DIR = os.getenv("PODCASTS_DIR", "/host_podcasts")
 
 def extract_metadata(file_path: str) -> dict:
     """
@@ -21,8 +25,8 @@ def extract_metadata(file_path: str) -> dict:
         "file_name": path.name,
         "file_size": path.stat().st_size,
         "created_at": path.stat().st_ctime,
-        "path": str(path.resolve())
+        "path": f"{PODCASTS_DIR}/{path.name}"
     }
-    
+
     logger.info(f"Extracted metadata for file={path.name}, size={metadata['file_size']} bytes")
     return metadata
