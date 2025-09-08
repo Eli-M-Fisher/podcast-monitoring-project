@@ -2,29 +2,29 @@ services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.0
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_CLIENT_PORT: ${ZOOKEEPER_CLIENT_PORT}
+      ZOOKEEPER_TICK_TIME: ${ZOOKEEPER_TICK_TIME}
     ports:
-      - "2181:2181"
+      - "${ZOOKEEPER_CLIENT_PORT}:${ZOOKEEPER_CLIENT_PORT}"
 
   kafka:
     image: confluentinc/cp-kafka:7.6.0
     depends_on:
       - zookeeper
     ports:
-      - "9092:9092"
-      - "29092:29092"  # extra port for my local testing
+      - "${KAFKA_INTERNAL_PORT}:${KAFKA_INTERNAL_PORT}"
+      - "${KAFKA_EXTERNAL_PORT}:${KAFKA_EXTERNAL_PORT}"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_BROKER_ID: ${KAFKA_BROKER_ID}
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: ${KAFKA_AUTO_CREATE_TOPICS_ENABLE}
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:${ZOOKEEPER_CLIENT_PORT}
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:${KAFKA_INTERNAL_PORT},PLAINTEXT_HOST://0.0.0.0:${KAFKA_EXTERNAL_PORT}
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:${KAFKA_INTERNAL_PORT},PLAINTEXT_HOST://${KAFKA_EXTERNAL_HOST}:${KAFKA_EXTERNAL_PORT}
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: ${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR}
     healthcheck:
-      test: ["CMD", "kafka-topics", "--list", "--bootstrap-server", "localhost:9092"]
+      test: ["CMD", "kafka-topics", "--list", "--bootstrap-server", "localhost:${KAFKA_INTERNAL_PORT}"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -36,11 +36,11 @@ services:
         condition: service_healthy
     restart: on-failure
     environment:
-      KAFKA_BROKER: kafka:9092
-      KAFKA_TOPIC: podcast-files
+      KAFKA_BROKER: kafka:${KAFKA_INTERNAL_PORT}
+      KAFKA_TOPIC: ${KAFKA_TOPIC}
       PODCASTS_DIR: /host_podcasts
     volumes:
-      - /Users/elifisher/Downloads/podcasts:/host_podcasts:ro
+      - ${PODCASTS_DIR_HOST}:/host_podcasts:ro
 
   consumer:
     build: ./consumer_service
@@ -53,15 +53,15 @@ services:
         condition: service_started
     restart: on-failure
     environment:
-      KAFKA_BROKER: kafka:9092
-      KAFKA_TOPIC: podcast-files
-      ES_HOST: http://elasticsearch:9200
-      ES_INDEX: podcasts_metadata
-      MONGO_URI: mongodb://mongo:27017/
-      MONGO_DB: podcasts_db
-      MONGO_COLLECTION: podcasts_files
+      KAFKA_BROKER: kafka:${KAFKA_INTERNAL_PORT}
+      KAFKA_TOPIC: ${KAFKA_TOPIC}
+      ES_HOST: ${ES_HOST}:${ES_PORT}
+      ES_INDEX: ${ES_INDEX}
+      MONGO_URI: ${MONGO_URI}
+      MONGO_DB: ${MONGO_DB}
+      MONGO_COLLECTION: ${MONGO_COLLECTION}
     volumes:
-      - /Users/elifisher/Downloads/podcasts:/host_podcasts:ro
+      - ${PODCASTS_DIR_HOST}:/host_podcasts:ro
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.2
@@ -70,23 +70,33 @@ services:
       - xpack.security.enabled=false
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:
-      - "9200:9200"
+      - "${ES_PORT}:${ES_PORT}"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:${ES_PORT} >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.15.2
     depends_on:
       - elasticsearch
     environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_HOSTS=${ES_HOST}:${ES_PORT}
     ports:
-      - "5601:5601"
+      - "${KIBANA_PORT}:${KIBANA_PORT}"
 
   mongo:
     image: mongo:7.0
     ports:
-      - "27017:27017"
+      - "${MONGO_PORT}:${MONGO_PORT}"
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
 volumes:
   mongo_data:
