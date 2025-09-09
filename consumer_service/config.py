@@ -6,7 +6,7 @@ KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "podcast-files")
 
 # elasticsearch configuration
 ES_HOST = os.getenv("ES_HOST", "http://elasticsearch:9200")
-ES_INDEX = os.getenv("ES_INDEX", "podcasts_metadata")
+ES_INDEX = os.getenv("ES_INDEX", "podcasts_metadata_v2")
 
 # mongoDB configuration
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://mongo:27017/")
