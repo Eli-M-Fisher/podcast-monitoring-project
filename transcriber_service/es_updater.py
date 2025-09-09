@@ -6,7 +6,7 @@ logger = Logger.get_logger()
 
 def update_transcription(unique_id: str, transcription: str):
     """
-    Update transcription field for the document with the given unique_id in Elasticsearch
+    update the transcription field in elasticsearch document identified by unique_id 
     """
     es = Elasticsearch(ES_HOST)
     try:
