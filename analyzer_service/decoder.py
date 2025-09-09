@@ -4,11 +4,7 @@ def decode_wordlist(encoded: str) -> list[str]:
     """
     here i decode a base64 encoded comma-separated wordlist into a Python list of words...
     """
-
-
-
-def decode_pairs(encoded: str) -> list[tuple[str, str]]:
-    """
-    and decode comma-separated pairs (word1|word2) into a list of tuples
-    like: "boycott|israel,apartheid|state"
-    """
+    if not encoded:
+        return []
+    decoded = base64.b64decode(encoded).decode("utf-8")
+    return [w.strip() for w in decoded.split(",") if w.strip()]
