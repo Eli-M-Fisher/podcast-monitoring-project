@@ -6,16 +6,20 @@ logger = Logger.get_logger()
 
 def update_transcription(unique_id: str, transcription: str):
     """
-    and update the transcription field for the document with unique id in elasticsearch
+    Update transcription field for the document with the given unique_id in Elasticsearch
     """
     es = Elasticsearch(ES_HOST)
     try:
         es.update(
             index=ES_INDEX,
             id=unique_id,
-            doc={"doc": {"transcription": transcription}}
+            body={
+                "doc": {"transcription": transcription}
+            },
+            doc_as_upsert=True
         )
         logger.info(f"Updated transcription for ID={unique_id}")
+
     except Exception as e:
-        logger.error(f"Failed to update transcription for ID={unique_id}: {e}")
+        logger.error(f"Error while updating transcription for ID={unique_id}: {e}")
         raise
