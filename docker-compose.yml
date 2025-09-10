@@ -84,6 +84,27 @@ services:
       ES_INDEX: ${ES_INDEX}
     volumes:
       - ${PODCASTS_DIR_HOST}:${PODCASTS_DIR}:ro
+
+  analyzer:
+    build:
+      context: .
+      dockerfile: ./analyzer_service/Dockerfile
+    depends_on:
+      kafka:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    restart: on-failure
+    environment:
+      KAFKA_BROKER: kafka:${KAFKA_INTERNAL_PORT}
+      KAFKA_TOPIC: ${ANALYZER_TOPIC}
+      ES_HOST: ${ES_HOST}:${ES_PORT}
+      ES_INDEX: ${ES_INDEX}
+      HOSTILE_WORDLIST_BASE64: ${HOSTILE_WORDLIST_BASE64}
+      LESS_HOSTILE_WORDLIST_BASE64: ${LESS_HOSTILE_WORDLIST_BASE64}
+      BDS_THRESHOLD: ${BDS_THRESHOLD}
+      MEDIUM_THRESHOLD: ${MEDIUM_THRESHOLD}
+      HIGH_THRESHOLD: ${HIGH_THRESHOLD}
       
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.2
