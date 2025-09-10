@@ -11,13 +11,17 @@ def update_analysis(unique_id: str, analysis: dict):
     # connect to elasticsearch
     es = Elasticsearch(ES_HOST)
     try:
-        # update the document with new fields for bds analysis results (bds_percent, is_bds, bds_threat_level)
         es.update(
             index=ES_INDEX,
             id=unique_id,
-            doc={"bds_percent": analysis["bds_percent"],
-                 "is_bds": analysis["is_bds"],
-                 "bds_threat_level": analysis["bds_threat_level"]}
+            body={
+                "doc": {
+                    "bds_percent": analysis["bds_percent"],
+                    "is_bds": analysis["is_bds"],
+                    "bds_threat_level": analysis["bds_threat_level"]
+                }
+            },
+            doc_as_upsert=True
         )
         logger.info(f"updated BDS analysis for ID={unique_id}")
     except Exception as e:
