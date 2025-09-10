@@ -2,7 +2,7 @@ import os
 
 # the kafka configuration
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
-KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "podcast-files")
+KAFKA_TOPIC = os.getenv("CONSUMER_TOPIC", "podcast-files")
 
 # elasticsearch configuration
 ES_HOST = os.getenv("ES_HOST", "http://elasticsearch:9200")

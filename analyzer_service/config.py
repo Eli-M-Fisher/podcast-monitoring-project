@@ -2,8 +2,7 @@ import os
 
 # kafka config
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "kafka:9092")
-KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "transcribed-files")
-
+KAFKA_TOPIC = os.getenv("ANALYZER_TOPIC", "transcribed-files")
 # elastic config
 ES_HOST = os.getenv("ES_HOST", "http://elasticsearch:9200")
 ES_INDEX = os.getenv("ES_INDEX", "podcasts_metadata_v2")
