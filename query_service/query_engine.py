@@ -53,11 +53,11 @@ def get_stats() -> dict:
                 "threat_levels": {"terms": {"field": "bds_threat_level"}}
             }
         )
-        # and return the aggregation results as a dictionary
+        # and return the aggregation results as a dictionary (and handles even if still empty (key) l.f)
         stats = {
-            "is_bds": resp["aggregations"]["is_bds_counts"]["buckets"],
-            "threat_levels": resp["aggregations"]["threat_levels"]["buckets"],
-        }
+            "is_bds": resp.get("aggregations", {}).get("is_bds_counts", {}).get("buckets", []),
+            "threat_levels": resp.get("aggregations", {}).get("threat_levels", {}).get("buckets", []),
+        }        
         return stats
     
     except Exception as e:
