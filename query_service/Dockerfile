@@ -7,7 +7,7 @@ WORKDIR /app
 # copy dependency files
 COPY query_service/requirements.txt /app/requirements.txt
 
-# install the dependencies
+# need install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # copy common utilities
@@ -16,5 +16,5 @@ COPY common /app/common
 # and copy query service code
 COPY query_service /app
 
-# default command (run uvicorn server to fastapi app)
+# default command
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -39,7 +39,7 @@ services:
     restart: on-failure
     environment:
       KAFKA_BROKER: kafka:${KAFKA_INTERNAL_PORT}
-      KAFKA_TOPIC: ${KAFKA_TOPIC}
+      PRODUCER_TOPIC: ${PRODUCER_TOPIC}
       PODCASTS_DIR: ${PODCASTS_DIR}
     volumes:
       - ${PODCASTS_DIR_HOST}:${PODCASTS_DIR}:ro
@@ -58,7 +58,7 @@ services:
     restart: on-failure
     environment:
       KAFKA_BROKER: kafka:${KAFKA_INTERNAL_PORT}
-      KAFKA_TOPIC: ${KAFKA_TOPIC}
+      CONSUMER_TOPIC: ${CONSUMER_TOPIC}
       ES_HOST: ${ES_HOST}:${ES_PORT}
       ES_INDEX: ${ES_INDEX}
       MONGO_URI: ${MONGO_URI}
@@ -79,7 +79,7 @@ services:
     restart: on-failure
     environment:
       KAFKA_BROKER: kafka:${KAFKA_INTERNAL_PORT}
-      KAFKA_TOPIC: ${KAFKA_TOPIC}
+      TRANSCRIBER_TOPIC: ${TRANSCRIBER_TOPIC}
       ES_HOST: ${ES_HOST}:${ES_PORT}
       ES_INDEX: ${ES_INDEX}
     volumes:
@@ -97,7 +97,7 @@ services:
     restart: on-failure
     environment:
       KAFKA_BROKER: kafka:${KAFKA_INTERNAL_PORT}
-      KAFKA_TOPIC: ${ANALYZER_TOPIC}
+      ANALYZER_TOPIC: ${ANALYZER_TOPIC}
       ES_HOST: ${ES_HOST}:${ES_PORT}
       ES_INDEX: ${ES_INDEX}
       HOSTILE_WORDLIST_BASE64: ${HOSTILE_WORDLIST_BASE64}
@@ -105,6 +105,21 @@ services:
       BDS_THRESHOLD: ${BDS_THRESHOLD}
       MEDIUM_THRESHOLD: ${MEDIUM_THRESHOLD}
       HIGH_THRESHOLD: ${HIGH_THRESHOLD}
+
+  query_service:
+    build:
+      context: .
+      dockerfile: ./query_service/Dockerfile
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    restart: on-failure
+    environment:
+      ES_HOST: ${ES_HOST}:${ES_PORT}
+      ES_INDEX: ${ES_INDEX}
+    ports:
+      - "${QUERY_PORT}:${QUERY_PORT}"
+
       
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.2
