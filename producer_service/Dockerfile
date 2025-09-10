@@ -5,7 +5,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # copy dependency files
-COPY query_service/requirements.txt /app/requirements.txt
+COPY producer_service/requirements.txt /app/requirements.txt
 
 # install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
@@ -13,8 +13,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # copy common utilities
 COPY common /app/common
 
-# and copy query service code
-COPY query_service /app
+# and copy producer service code
+COPY producer_service /app
 
-# default command (run uvicorn server to fastapi app)
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# default command
+CMD ["python", "main.py"]
