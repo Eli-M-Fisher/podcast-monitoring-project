@@ -1,4 +1,4 @@
-from kafka import KafkaConsumer
+from kafka import KafkaConsumer, KafkaProducer
 import json
 from config import KAFKA_BROKER, KAFKA_TOPIC
 from transcriber import transcribe_audio
@@ -6,6 +6,27 @@ from es_updater import update_transcription
 from common.logger import Logger
 
 logger = Logger.get_logger()
+
+# first initialize kafka producer for sending transcribed results
+producer = KafkaProducer(
+    bootstrap_servers=[KAFKA_BROKER],
+    value_serializer=lambda v: json.dumps(v).encode("utf-8")
+)
+
+def publish_transcribed_message(unique_id: str, transcription: str):
+    """
+    Publish a transcribed message to the 'transcribed-files' topic
+    so that the analyzer service can consume and analyze it.
+    """
+    try:
+        message = {"id": unique_id, "transcription": transcription}
+        producer.send("transcribed-files", message)
+        producer.flush()
+        logger.info(f"Published transcribed message to 'transcribed-files': {message}")
+    except Exception as e:
+        logger.error(f"Failed to publish transcribed message for ID={unique_id}: {e}")
+        raise
+
 
 def main():
     # create a Kafka consumer to listen to the topic
@@ -29,11 +50,17 @@ def main():
             continue
 
         try:
+            # runing transcription
             transcription = transcribe_audio(file_path)
-            update_transcription(unique_id, transcription) # update transcription in es
-            logger.info(f"Transcription completed and updated in es (ID={unique_id})")
+            # and update transcription in Elasticsearch
+            update_transcription(unique_id, transcription)
+            # and publish to Kafka for analyzer
+            publish_transcribed_message(unique_id, transcription)
+
+            logger.info(f"Transcription completed, updated in ES, and published to Kafka (ID={unique_id})")
+
         except Exception as e:
-            logger.error(f"processing failed for message {data}: {e}")
+            logger.error(f"Processing failed for message {data}: {e}")
 
 if __name__ == "__main__":
     main()
